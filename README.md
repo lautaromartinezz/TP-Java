@@ -20,9 +20,9 @@ Sistema de gestion de la empresa Monsters Inc. - Se registran los monstruos que 
 
 |Requerimiento|Detalle/Listado de casos incluidos|
 |:-|-:|
-|ABMC simple|Monstruo, Puerta, Puesto|
-|ABMC dependiente|Resultado|
-|CU NO-ABMC||
+|ABMC simple|Resultado, Puerta, Puesto|
+|ABMC dependiente|Monstruo|
+|CU NO-ABMC|resultado|
 |Listado simple|Lista de todos los monstruos x energia generada|
 
 
@@ -31,7 +31,7 @@ Sistema de gestion de la empresa Monsters Inc. - Se registran los monstruos que 
 |Requerimiento|Detalle/Listado de casos incluidos|
 |:-|-:|
 |ABMC|Monstruo, Puerta, Puesto, Resultado|
-|CU "Complejo"(nivel resumen)|1|
+|CU "Complejo"(nivel resumen)|ranking de monstruos de energía generada |
 |Listado complejo|Lista de resultados por fecha|
 |Nivel de acceso|Administrador, Asustador|
 
