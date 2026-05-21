@@ -1,44 +1,39 @@
 # TP-Java
 
-## Proposal
+## Requisitos
 
-### Integrantes
+- **JDK 21** — [Descargar Temurin JDK 21 x64 MSI](https://adoptium.net/temurin/releases/?version=21)
+- **Apache Tomcat 10.0** — Servidor de aplicaciones
 
-- 52802 - Francisco Marcelo Gil
-- 53192 - Lautaro Martinez
+## Docker Setup
 
-### Descripcion
+```bash
+docker run --name javaDB \
+  -v /c/Users/TuUsuario/docker-volumes/javaDB:/var/lib/mysql \
+  -e MYSQL_ROOT_HOST='%' \
+  -e MYSQL_ALLOW_EMPTY_PASSWORD="yes" \
+  -e MYSQL_PASSWORD="tpjava" \
+  -e MYSQL_USER="tpjava" \
+  -e MYSQL_DATABASE='javaDB' \
+  -p 3307:3306 \
+  -d percona/percona-server
+```
 
-Sistema de gestion de la empresa Monsters Inc. - Se registran los monstruos que van a asustar a los niños, todos los dias se les asigna un puesto y diferentes puertas al puesto, cuando terminan de asustar al niño designado se carga el resultado de la energia generada.
+Luego ejecutar los archivos `.sql` de la carpeta `db/` para inicializar la base de datos.
 
+## Configuración en Eclipse
 
-<img width="641" height="531" alt="image" src="https://github.com/user-attachments/assets/11b2a30f-4f77-4c51-bc9c-949800686096" />
+1. **Importar el proyecto:** `File > Import > Existing Maven Projects` y seleccionar la carpeta raíz.
+2. **Actualizar dependencias:** Click derecho sobre el proyecto `Maven > Update Project`.
+3. **Configurar Tomcat 10:** `Window > Preferences > Server > Runtime Environments > Add > Apache Tomcat v10.0`.
+4. **Ejecutar:** Click derecho sobre el proyecto `Run As > Run on Server` y seleccionar Tomcat 10.
 
+## Estructura del proyecto
 
-
-#### Regularidad
-
-|Requerimiento|Detalle/Listado de casos incluidos|
-|:-|-:|
-|ABMC simple|Resultado, Puerta, Puesto|
-|ABMC dependiente|Monstruo|
-|CU NO-ABMC|resultado|
-|Listado simple|Lista de todos los monstruos x energia generada|
-
-
-#### Aprobación Directa
-
-|Requerimiento|Detalle/Listado de casos incluidos|
-|:-|-:|
-|ABMC|Monstruo, Puerta, Puesto, Resultado|
-|CU "Complejo"(nivel resumen)|ranking de monstruos de energía generada |
-|Listado complejo|Lista de resultados por fecha|
-|Nivel de acceso|Administrador, Asustador|
-
-###### Requerimientos extra - AD
-|Requerimiento |Detalle/Listado de casos incluidos|
-|:-|:-|
-|Manejo de archivos||
-|Custom exceptions||
-|Log de errores||
-|Envio de emails||
+```
+src/main/java/
+├── entities/       # Modelos de dominio
+├── data/           # Capa de acceso a datos
+├── controller/     # Lógica de negocio
+└── servlet/        # Servlets HTTP
+```
