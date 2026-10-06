@@ -11,4 +11,20 @@ public class ControllerMonster {
 	public LinkedList<Monster> GetAll(){
 		return dm.GetAll();
 	}
+	
+	public Monster GetOne(int id){
+		return dm.GetOne(id);
+	}
+
+	public void Add(Monster m) {
+		dm.Add(m);
+	}
+	
+	public void Update(Monster m) {
+		dm.Update(m);
+	}
+	
+	public void Delete(int id) {
+		dm.Delete(id);
+	}
 }

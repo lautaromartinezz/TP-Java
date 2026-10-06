@@ -21,6 +21,6 @@ public class Monster {
 	
 	@Override
 	public String toString() {
-		return "\nPersona [id=" + id + ", nombre=" + name + "]";
+		return "\nMonster [id=" + id + ", nombre=" + name + "]";
 	}
 }
