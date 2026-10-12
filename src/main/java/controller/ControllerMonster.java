@@ -12,6 +12,10 @@ public class ControllerMonster {
 		return dm.GetAll();
 	}
 	
+	public LinkedList<Monster> GetRanking(){
+		return dm.GetRanking();
+	}
+	
 	public Monster GetOne(int id){
 		return dm.GetOne(id);
 	}

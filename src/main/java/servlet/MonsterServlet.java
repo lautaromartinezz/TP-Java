@@ -28,6 +28,13 @@ public class MonsterServlet extends HttpServlet {
 			return;
 		}
 
+		String rankingParam = request.getParameter("ranking");
+		if (rankingParam != null) {
+			request.setAttribute("monsters", cm.GetRanking());
+			request.getRequestDispatcher("/monster/ranking.jsp").forward(request, response);
+			return;
+		}
+
 		Integer id = ParseId(request, response);
 		if (id == null) { return; }
 
@@ -55,15 +62,15 @@ public class MonsterServlet extends HttpServlet {
 
 		InitResponse(response);
 
-		String name = request.getParameter("name");
+		String name = request.getParameter("nombre");
 		if (name == null || name.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'name' is required");
+			response.getWriter().println("Parameter 'nombre' is required");
 			return;
 		}
 
 		Monster m = new Monster();
-		m.setName(name);
+		m.setNombre(name);
 		cm.Add(m);
 
 		response.sendRedirect(request.getContextPath() + "/monster");
@@ -82,10 +89,10 @@ public class MonsterServlet extends HttpServlet {
 			return;
 		}
 
-		String name = request.getParameter("name");
+		String name = request.getParameter("nombre");
 		if (name == null || name.isEmpty()) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'name' is required");
+			response.getWriter().println("Parameter 'nombre' is required");
 			return;
 		}
 
@@ -96,7 +103,7 @@ public class MonsterServlet extends HttpServlet {
 			return;
 		}
 
-		m.setName(name);
+		m.setNombre(name);
 		cm.Update(m);
 
 		response.sendRedirect(request.getContextPath() + "/monster");

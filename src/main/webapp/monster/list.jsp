@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.LinkedList" %>
 <%@ page import="entities.Monster" %>
+<%@ page import="util.HtmlUtil" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,10 +21,11 @@
 
 	<% String error = (String) request.getAttribute("error"); %>
 	<% if (error != null) { %>
-		<p class="error"><%= error %></p>
+		<p class="error"><%= HtmlUtil.escapeHtml(error) %></p>
 	<% } %>
 
 	<a href="<%= request.getContextPath() %>/monster?new=true">+ Nuevo monster</a>
+	<a href="<%= request.getContextPath() %>/monster?ranking=true">Ver ranking por energia</a>
 
 	<table>
 		<tr>
@@ -35,25 +37,15 @@
 			LinkedList<Monster> monsters = (LinkedList<Monster>) request.getAttribute("monsters");
 			if (monsters != null) {
 				for (Monster m : monsters) {
-				String safeMonsterName = m.getName()
-					.replace("&", "&amp;")
-					.replace("<", "&lt;")
-					.replace(">", "&gt;")
-					.replace("\"", "&quot;")
-					.replace("'", "&#39;");
-				String safeJsMonsterName = m.getName()
-					.replace("\\", "\\\\")
-					.replace("\"", "\\\"")
-					.replace("'", "\\'")
-					.replace("\r", "\\r")
-					.replace("\n", "\\n");
+				String safeNombre = HtmlUtil.escapeHtml(m.getNombre());
+				String safeJsNombre = HtmlUtil.escapeJs(m.getNombre());
 		%>
 		<tr>
 			<td><%= m.getId() %></td>
-			<td><%= safeMonsterName %></td>
+			<td><%= safeNombre %></td>
 			<td>
 				<a href="<%= request.getContextPath() %>/monster?id=<%= m.getId() %>">Editar</a>
-				<button type="button" onclick="eliminar('<%= m.getId() %>', '<%= safeJsMonsterName %>')">Eliminar</button>
+				<button type="button" onclick="eliminar('<%= m.getId() %>', '<%= safeJsNombre %>')">Eliminar</button>
 			</td>
 		</tr>
 		<%
@@ -63,8 +55,8 @@
 	</table>
 
 	<script>
-		function eliminar(id, name) {
-			if (!confirm('Eliminar ' + name + '?')) { return; }
+		function eliminar(id, nombre) {
+			if (!confirm('Eliminar ' + nombre + '?')) { return; }
 			fetch('<%= request.getContextPath() %>/monster?id=' + id, { method: 'DELETE' })
 				.then(function() { location.href = '<%= request.getContextPath() %>/monster'; });
 		}

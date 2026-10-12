@@ -2,7 +2,8 @@ package entities;
 
 public class Monster {
 	private int id;
-	private String name;
+	private String nombre;
+	private int energiaTotal;
 	
 	
 	public int getId() {
@@ -11,16 +12,22 @@ public class Monster {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public String getName() {
-		return name;
+	public String getNombre() {
+		return nombre;
 	}
-	public void setName(String name) {
-		this.name = name;
+	public void setNombre(String nombre) {
+		this.nombre = nombre;
+	}
+	public int getEnergiaTotal() {
+		return energiaTotal;
+	}
+	public void setEnergiaTotal(int energiaTotal) {
+		this.energiaTotal = energiaTotal;
 	}
 	
 	
 	@Override
 	public String toString() {
-		return "\nMonster [id=" + id + ", nombre=" + name + "]";
+		return "\nMonster [id=" + id + ", nombre=" + nombre + ", energiaTotal=" + energiaTotal + "]";
 	}
 }

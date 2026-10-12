@@ -1,9 +1,38 @@
 CREATE DATABASE IF NOT EXISTS javaDB;
 USE javaDB;
 
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS resultado;
+DROP TABLE IF EXISTS puerta;
+DROP TABLE IF EXISTS puesto;
 DROP TABLE IF EXISTS monster;
-CREATE TABLE IF NOT EXISTS monster (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL
-)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET FOREIGN_KEY_CHECKS = 1;
 
+CREATE TABLE monster (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE puesto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion VARCHAR(255)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE puerta (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    numero VARCHAR(20) NOT NULL,
+    id_puesto INT NOT NULL,
+    CONSTRAINT fk_puerta_puesto FOREIGN KEY (id_puesto) REFERENCES puesto(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE resultado (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATETIME NOT NULL,
+    energia_generada INT NOT NULL,
+    nombre_nino VARCHAR(255) NOT NULL,
+    id_monster INT NOT NULL,
+    id_puerta INT NOT NULL,
+    CONSTRAINT fk_resultado_monster FOREIGN KEY (id_monster) REFERENCES monster(id),
+    CONSTRAINT fk_resultado_puerta FOREIGN KEY (id_puerta) REFERENCES puerta(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
