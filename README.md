@@ -28,15 +28,66 @@ Luego ejecutar los archivos `.sql` de la carpeta `db/` para inicializar la base 
 3. **Configurar Tomcat 10:** `Window > Preferences > Server > Runtime Environments > Add > Apache Tomcat v10.0`.
 4. **Ejecutar:** Click derecho sobre el proyecto `Run As > Run on Server` y seleccionar Tomcat 10.
 
-## Estructura del proyecto
+## Arquitectura
+
+Aplicación web Java (Jakarta EE / Servlet API 6) empaquetada como `.war` y desplegada en Tomcat 10.
+Sigue una arquitectura en capas: la vista (JSP) se comunica con los `servlet`, estos con los
+`controller` (lógica de negocio) y estos últimos con la capa `data` (acceso a MySQL vía JDBC).
 
 ```
-src/main/java/
-├── entities/       # Modelos de dominio
-├── data/           # Capa de acceso a datos
-├── controller/     # Lógica de negocio
-└── servlet/        # Servlets HTTP
+vista (JSP)  ->  servlet (HTTP)  ->  controller (negocio)  ->  data (JDBC)  ->  MySQL
 ```
+
+### Estructura del proyecto
+
+```
+TP-Java/
+├── db/                          # Scripts SQL
+│   ├── init.sql                 # Creación de esquema y tablas
+│   └── dump.sql                 # Volcado de datos
+├── src/main/java/
+│   ├── entities/                # Modelos de dominio (Monster, Puerta, Puesto, Resultado, ...)
+│   ├── data/                    # Capa de acceso a datos (JDBC + DbConnector)
+│   ├── controller/              # Lógica de negocio (una por entidad)
+│   ├── servlet/                 # Controladores HTTP (rutas de la app)
+│   └── util/                    # Utilidades (HtmlUtil: escape de HTML/JS)
+├── src/main/webapp/
+│   ├── css/app.css              # Estilos de la aplicación
+│   ├── index.jsp                # Punto de entrada (redirige a /dashboard)
+│   ├── monster/                 # Vistas de monstruos (list, form, ranking)
+│   ├── puerta/                  # Vistas de puertas (list, form)
+│   ├── puesto/                  # Vistas de puestos (list, form)
+│   ├── puerta-asignada/         # Vistas de puertas asignadas (list, form)
+│   ├── puesto-asignado/         # Vistas de puestos asignados (list, form)
+│   ├── resultado/               # Vistas de resultados (list, form)
+│   └── WEB-INF/                 # Recursos no accesibles directamente
+│       ├── dashboard.jsp        # Panel de control con métricas
+│       └── includes/            # Fragmentos compartidos (header, footer)
+└── pom.xml                      # Configuración Maven (dependencias y plugins)
+```
+
+### Capas
+
+| Capa | Paquete / ruta | Responsabilidad |
+|------|----------------|-----------------|
+| Vista | `src/main/webapp/**/*.jsp` | Renderizado HTML de listados y formularios |
+| Servlet | `src/main/java/servlet` | Manejo de HTTP (doGet/doPost/doPut/doDelete) y ruteo |
+| Controller | `src/main/java/controller` | Lógica de negocio y validaciones |
+| Data | `src/main/java/data` | Acceso a datos con JDBC |
+| Entities | `src/main/java/entities` | Objetos de dominio |
+| Util | `src/main/java/util` | Helpers transversales (escape HTML/JS) |
+
+### Rutas HTTP
+
+| Ruta | Entidad | Métodos |
+|------|---------|---------|
+| `/dashboard` | Panel de control (métricas) | GET |
+| `/monster` | Monstruos (+ ranking) | GET, POST, PUT, DELETE |
+| `/puerta` | Puertas | GET, POST, PUT, DELETE |
+| `/puesto` | Puestos | GET, POST, PUT, DELETE |
+| `/puesto-asignado` | Asignación monstruo → puesto | GET, POST, PUT, DELETE |
+| `/puerta-asignada` | Asignación puerta → puesto | GET, POST, PUT, DELETE |
+| `/resultado` | Resultados de energía | GET, POST, PUT, DELETE |
 
 ## TODO / Pendientes
 
