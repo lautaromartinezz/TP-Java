@@ -2,47 +2,61 @@
 <%@ page import="java.util.LinkedList" %>
 <%@ page import="entities.Monster" %>
 <%@ page import="util.HtmlUtil" %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Ranking de Monsters</title>
-<style>
-	body { font-family: sans-serif; margin: 2rem; }
-	table { border-collapse: collapse; margin-top: 1rem; }
-	th, td { border: 1px solid #ccc; padding: 6px 12px; text-align: left; }
-	th { background: #f0f0f0; }
-	.rank { font-weight: bold; }
-</style>
-</head>
-<body>
-	<h1>Lista de monstruos por energia generada</h1>
+<%
+	String ctx = request.getContextPath();
+%>
+<jsp:include page="/WEB-INF/includes/header.jsp" />
 
-	<a href="<%= request.getContextPath() %>/monster">Volver al listado</a>
+<div class="page-header">
+	<h1 class="page-title">Monstruos por energia generada</h1>
+	<div class="page-actions">
+		<a href="<%= ctx %>/monster" class="btn btn-ghost">
+			<i data-lucide="arrow-left" class="icon-sm"></i>
+			Volver al listado
+		</a>
+	</div>
+</div>
 
-	<table>
-		<tr>
-			<th>#</th>
-			<th>ID</th>
-			<th>Nombre</th>
-			<th>Energia total</th>
-		</tr>
-		<%
-			LinkedList<Monster> monsters = (LinkedList<Monster>) request.getAttribute("monsters");
-			if (monsters != null) {
-				int pos = 1;
-				for (Monster m : monsters) {
-		%>
-		<tr>
-			<td class="rank"><%= pos++ %></td>
-			<td><%= m.getId() %></td>
-			<td><%= HtmlUtil.escapeHtml(m.getNombre()) %></td>
-			<td><%= m.getEnergiaTotal() %></td>
-		</tr>
-		<%
-				}
-			}
-		%>
-	</table>
-</body>
-</html>
+<%
+	LinkedList<Monster> monsters = (LinkedList<Monster>) request.getAttribute("monsters");
+	if (monsters == null || monsters.isEmpty()) {
+%>
+	<div class="empty-state">
+		<i data-lucide="trophy" class="empty-state-icon"></i>
+		<p>No hay datos para rankear todavia.</p>
+	</div>
+<%
+	} else {
+%>
+	<div class="table-wrapper mt-3">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>ID</th>
+					<th>Nombre</th>
+					<th>Energia total</th>
+				</tr>
+			</thead>
+			<tbody>
+				<%
+					int pos = 1;
+					for (Monster m : monsters) {
+				%>
+				<tr>
+					<td><strong><%= pos++ %></strong></td>
+					<td><%= m.getId() %></td>
+					<td><%= HtmlUtil.escapeHtml(m.getNombre()) %></td>
+					<td><%= m.getEnergiaTotal() %></td>
+				</tr>
+				<%
+					}
+				%>
+			</tbody>
+		</table>
+	</div>
+<%
+	}
+%>
+
+<jsp:include page="/WEB-INF/includes/footer.jsp" />

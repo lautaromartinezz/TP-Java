@@ -8,63 +8,63 @@
 	String nombre = edit ? puesto.getNombre() : "";
 	String descripcion = edit && puesto.getDescripcion() != null ? puesto.getDescripcion() : "";
 %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title><%= edit ? "Editar Puesto" : "Nuevo Puesto" %></title>
-<style>
-	body { font-family: sans-serif; margin: 2rem; }
-	label { display: block; margin-bottom: 4px; font-weight: bold; }
-	input, textarea { padding: 6px; width: 240px; }
-	.error { color: #c00; font-weight: bold; }
-	button { margin-top: 12px; padding: 6px 14px; }
-</style>
-</head>
-<body>
-	<h1><%= edit ? "Editar Puesto #" + puesto.getId() : "Nuevo Puesto" %></h1>
+<jsp:include page="/WEB-INF/includes/header.jsp" />
 
-	<p id="error" class="error"></p>
+<div class="page-header">
+	<h1 class="page-title"><%= edit ? "Editar puesto #" + puesto.getId() : "Nuevo puesto" %></h1>
+</div>
 
-	<form id="form" method="post" action="<%= ctx %>/puesto">
-		<label for="nombre">Nombre</label>
-		<input type="text" id="nombre" name="nombre" value="<%= HtmlUtil.escapeHtml(nombre) %>" required>
-		<br>
-		<label for="descripcion">Descripcion</label>
-		<textarea id="descripcion" name="descripcion"><%= HtmlUtil.escapeHtml(descripcion) %></textarea>
-		<br>
-		<button type="submit"><%= edit ? "Guardar" : "Crear" %></button>
-		<a href="<%= ctx %>/puesto">Volver</a>
+<div class="card card-form">
+	<form id="form" class="form" method="post" action="<%= ctx %>/puesto">
+		<div class="form-group">
+			<label class="form-label" for="nombre">Nombre</label>
+			<input class="form-input" type="text" id="nombre" name="nombre" value="<%= HtmlUtil.escapeHtml(nombre) %>" required>
+		</div>
+		<div class="form-group">
+			<label class="form-label" for="descripcion">Descripcion</label>
+			<textarea class="form-textarea" id="descripcion" name="descripcion"><%= HtmlUtil.escapeHtml(descripcion) %></textarea>
+		</div>
+		<div class="alert alert-error" id="error" hidden></div>
+		<div class="form-actions">
+			<button type="submit" class="btn btn-primary">
+				<i data-lucide="save" class="icon-sm"></i>
+				<%= edit ? "Guardar" : "Crear" %>
+			</button>
+			<a href="<%= ctx %>/puesto" class="btn btn-ghost">Volver</a>
+		</div>
 	</form>
+</div>
 
-	<script>
-		var ctx = '<%= ctx %>';
-		var edit = <%= edit %>;
-		var id = <%= edit ? puesto.getId() : 0 %>;
+<script>
+	var ctx = '<%= ctx %>';
+	var edit = <%= edit %>;
+	var id = <%= edit ? puesto.getId() : 0 %>;
 
-		document.getElementById('form').addEventListener('submit', function(e) {
-			e.preventDefault();
-			var nombre = document.getElementById('nombre').value;
-			var descripcion = document.getElementById('descripcion').value;
-			var url = ctx + '/puesto';
-			if (edit) {
-				url += '?id=' + id;
+	document.getElementById('form').addEventListener('submit', function(e) {
+		e.preventDefault();
+		var nombre = document.getElementById('nombre').value;
+		var descripcion = document.getElementById('descripcion').value;
+		var url = ctx + '/puesto';
+		if (edit) {
+			url += '?id=' + id;
+		}
+		fetch(url, {
+			method: edit ? 'PUT' : 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: 'nombre=' + encodeURIComponent(nombre)
+				+ '&descripcion=' + encodeURIComponent(descripcion)
+		}).then(function(res) {
+			if (res.ok || res.redirected) {
+				location.href = ctx + '/puesto';
+			} else {
+				return res.text().then(function(msg) {
+					var error = document.getElementById('error');
+					error.textContent = msg;
+					error.hidden = false;
+				});
 			}
-			fetch(url, {
-				method: edit ? 'PUT' : 'POST',
-				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-				body: 'nombre=' + encodeURIComponent(nombre)
-					+ '&descripcion=' + encodeURIComponent(descripcion)
-			}).then(function(res) {
-				if (res.ok || res.redirected) {
-					location.href = ctx + '/puesto';
-				} else {
-					return res.text().then(function(msg) {
-						document.getElementById('error').textContent = msg;
-					});
-				}
-			});
 		});
-	</script>
-</body>
-</html>
+	});
+</script>
+
+<jsp:include page="/WEB-INF/includes/footer.jsp" />
