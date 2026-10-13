@@ -3,9 +3,7 @@ package servlet;
 import java.io.IOException;
 import java.util.LinkedList;
 
-import controller.ControllerPuesto;
 import controller.ControllerPuerta;
-import entities.Puesto;
 import entities.Puerta;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -26,7 +24,6 @@ public class PuertaServlet extends HttpServlet {
 
 		String newParam = request.getParameter("new");
 		if (newParam != null) {
-			LoadPuestos(request);
 			request.getRequestDispatcher("/puerta/form.jsp").forward(request, response);
 			return;
 		}
@@ -50,7 +47,6 @@ public class PuertaServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("puerta", p);
-		LoadPuestos(request);
 		request.getRequestDispatcher("/puerta/form.jsp").forward(request, response);
 	}
 
@@ -59,8 +55,15 @@ public class PuertaServlet extends HttpServlet {
 
 		InitResponse(response);
 
+		String numero = request.getParameter("numero");
+		if (numero == null || numero.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("Parameter 'numero' is required");
+			return;
+		}
+
 		Puerta p = new Puerta();
-		if (!Fill(request, response, p)) { return; }
+		p.setNumero(numero);
 		cp.Add(p);
 
 		response.sendRedirect(request.getContextPath() + "/puerta");
@@ -79,6 +82,13 @@ public class PuertaServlet extends HttpServlet {
 			return;
 		}
 
+		String numero = request.getParameter("numero");
+		if (numero == null || numero.isEmpty()) {
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			response.getWriter().println("Parameter 'numero' is required");
+			return;
+		}
+
 		Puerta p = cp.GetOne(id);
 		if (p.getId() == 0) {
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -86,7 +96,7 @@ public class PuertaServlet extends HttpServlet {
 			return;
 		}
 
-		if (!Fill(request, response, p)) { return; }
+		p.setNumero(numero);
 		cp.Update(p);
 
 		response.sendRedirect(request.getContextPath() + "/puerta");
@@ -115,43 +125,6 @@ public class PuertaServlet extends HttpServlet {
 		cp.Delete(id);
 
 		response.sendRedirect(request.getContextPath() + "/puerta");
-	}
-
-	private boolean Fill(HttpServletRequest request, HttpServletResponse response, Puerta p) throws IOException {
-		String numero = request.getParameter("numero");
-		if (numero == null || numero.isEmpty()) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'numero' is required");
-			return false;
-		}
-
-		String idPuestoParam = request.getParameter("id_puesto");
-		if (idPuestoParam == null || idPuestoParam.isEmpty()) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'id_puesto' is required");
-			return false;
-		}
-
-		int idPuesto;
-		try {
-			idPuesto = Integer.parseInt(idPuestoParam);
-		} catch (NumberFormatException e) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Invalid id_puesto: " + idPuestoParam);
-			return false;
-		}
-
-		Puesto puesto = new Puesto();
-		puesto.setId(idPuesto);
-
-		p.setNumero(numero);
-		p.setPuesto(puesto);
-		return true;
-	}
-
-	private void LoadPuestos(HttpServletRequest request) {
-		ControllerPuesto cp = new ControllerPuesto();
-		request.setAttribute("puestos", cp.GetAll());
 	}
 
 	private void InitResponse(HttpServletResponse response) {

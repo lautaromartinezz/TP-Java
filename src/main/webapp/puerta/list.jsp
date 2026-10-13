@@ -2,63 +2,84 @@
 <%@ page import="java.util.LinkedList" %>
 <%@ page import="entities.Puerta" %>
 <%@ page import="util.HtmlUtil" %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Puertas</title>
-<style>
-	body { font-family: sans-serif; margin: 2rem; }
-	table { border-collapse: collapse; margin-top: 1rem; }
-	th, td { border: 1px solid #ccc; padding: 6px 12px; text-align: left; }
-	th { background: #f0f0f0; }
-	.error { color: #c00; font-weight: bold; }
-	a, button { margin-right: 6px; }
-</style>
-</head>
-<body>
-	<h1>Lista de Puertas</h1>
+<%
+	String ctx = request.getContextPath();
+%>
+<jsp:include page="/WEB-INF/includes/header.jsp" />
 
-	<% String error = (String) request.getAttribute("error"); %>
-	<% if (error != null) { %>
-		<p class="error"><%= HtmlUtil.escapeHtml(error) %></p>
-	<% } %>
+<div class="page-header">
+	<h1 class="page-title">Puertas</h1>
+	<div class="page-actions">
+		<a href="<%= ctx %>/puerta?new=true" class="btn btn-primary">
+			<i data-lucide="plus" class="icon-sm"></i>
+			Nueva puerta
+		</a>
+	</div>
+</div>
 
-	<a href="<%= request.getContextPath() %>/puerta?new=true">+ Nueva puerta</a>
+<%
+	String error = (String) request.getAttribute("error");
+	if (error != null) {
+%>
+	<p class="alert alert-error"><%= HtmlUtil.escapeHtml(error) %></p>
+<%
+	}
+%>
 
-	<table>
-		<tr>
-			<th>ID</th>
-			<th>Numero</th>
-			<th>Puesto</th>
-			<th>Acciones</th>
-		</tr>
-		<%
-			LinkedList<Puerta> puertas = (LinkedList<Puerta>) request.getAttribute("puertas");
-			if (puertas != null) {
-				for (Puerta p : puertas) {
-		%>
-		<tr>
-			<td><%= p.getId() %></td>
-			<td><%= HtmlUtil.escapeHtml(p.getNumero()) %></td>
-			<td><%= HtmlUtil.escapeHtml(p.getPuesto() != null ? p.getPuesto().getNombre() : "") %></td>
-			<td>
-				<a href="<%= request.getContextPath() %>/puerta?id=<%= p.getId() %>">Editar</a>
-				<button type="button" onclick="eliminar('<%= p.getId() %>', '<%= HtmlUtil.escapeJs(p.getNumero()) %>')">Eliminar</button>
-			</td>
-		</tr>
-		<%
-				}
-			}
-		%>
-	</table>
+<%
+	LinkedList<Puerta> puertas = (LinkedList<Puerta>) request.getAttribute("puertas");
+	if (puertas == null || puertas.isEmpty()) {
+%>
+	<div class="empty-state">
+		<i data-lucide="door-open" class="empty-state-icon"></i>
+		<p>No hay puertas cargadas todavia.</p>
+	</div>
+<%
+	} else {
+%>
+	<div class="table-wrapper mt-3">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Numero</th>
+					<th>Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+				<%
+					for (Puerta p : puertas) {
+				%>
+				<tr>
+					<td><%= p.getId() %></td>
+					<td><%= HtmlUtil.escapeHtml(p.getNumero()) %></td>
+					<td class="actions">
+						<a href="<%= ctx %>/puerta?id=<%= p.getId() %>" class="btn btn-ghost">
+							<i data-lucide="pencil" class="icon-sm"></i>
+							Editar
+						</a>
+						<button type="button" class="btn btn-danger" onclick="eliminar('<%= p.getId() %>', '<%= HtmlUtil.escapeJs(p.getNumero()) %>')">
+							<i data-lucide="trash-2" class="icon-sm"></i>
+							Eliminar
+						</button>
+					</td>
+				</tr>
+				<%
+					}
+				%>
+			</tbody>
+		</table>
+	</div>
+<%
+	}
+%>
 
-	<script>
-		function eliminar(id, numero) {
-			if (!confirm('Eliminar puerta ' + numero + '?')) { return; }
-			fetch('<%= request.getContextPath() %>/puerta?id=' + id, { method: 'DELETE' })
-				.then(function() { location.href = '<%= request.getContextPath() %>/puerta'; });
-		}
-	</script>
-</body>
-</html>
+<script>
+	function eliminar(id, numero) {
+		if (!confirm('Eliminar puerta ' + numero + '?')) { return; }
+		fetch('<%= ctx %>/puerta?id=' + id, { method: 'DELETE' })
+			.then(function() { location.href = '<%= ctx %>/puerta'; });
+	}
+</script>
+
+<jsp:include page="/WEB-INF/includes/footer.jsp" />
