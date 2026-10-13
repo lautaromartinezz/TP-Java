@@ -1,73 +1,106 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ page import="java.util.LinkedList" %>
+<%@ page import="entities.PuestoAsignado" %>
+<%@ page import="entities.PuertaAsignada" %>
 <%@ page import="entities.Resultado" %>
 <%@ page import="util.HtmlUtil" %>
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Resultados</title>
-<style>
-	body { font-family: sans-serif; margin: 2rem; }
-	table { border-collapse: collapse; margin-top: 1rem; }
-	th, td { border: 1px solid #ccc; padding: 6px 12px; text-align: left; }
-	th { background: #f0f0f0; }
-	.error { color: #c00; font-weight: bold; }
-	a, button { margin-right: 6px; }
-</style>
-</head>
-<body>
-	<h1>Lista de Resultados</h1>
+<%
+	String ctx = request.getContextPath();
+%>
+<jsp:include page="/WEB-INF/includes/header.jsp" />
 
-	<% String error = (String) request.getAttribute("error"); %>
-	<% if (error != null) { %>
-		<p class="error"><%= HtmlUtil.escapeHtml(error) %></p>
-	<% } %>
+<div class="page-header">
+	<h1 class="page-title">Resultados</h1>
+	<div class="page-actions">
+		<a href="<%= ctx %>/resultado?asustar=true" class="btn btn-ghost">
+			<i data-lucide="ghost" class="icon-sm"></i>
+			Asustar a un nino
+		</a>
+		<a href="<%= ctx %>/resultado?new=true" class="btn btn-primary">
+			<i data-lucide="plus" class="icon-sm"></i>
+			Nuevo resultado
+		</a>
+	</div>
+</div>
 
-	<a href="<%= request.getContextPath() %>/resultado?new=true">+ Nuevo resultado</a>
-	<a href="<%= request.getContextPath() %>/resultado?asustar=true">Asustar a un nino</a>
+<%
+	String error = (String) request.getAttribute("error");
+	if (error != null) {
+%>
+	<p class="alert alert-error"><%= HtmlUtil.escapeHtml(error) %></p>
+<%
+	}
+%>
 
-	<table>
-		<tr>
-			<th>ID</th>
-			<th>Fecha</th>
-			<th>Nino</th>
-			<th>Monstruo</th>
-			<th>Puerta</th>
-			<th>Puesto</th>
-			<th>Energia</th>
-			<th>Acciones</th>
-		</tr>
-		<%
-			LinkedList<Resultado> resultados = (LinkedList<Resultado>) request.getAttribute("resultados");
-			if (resultados != null) {
-				for (Resultado r : resultados) {
-		%>
-		<tr>
-			<td><%= r.getId() %></td>
-			<td><%= r.getFechaFormateada() %></td>
-			<td><%= HtmlUtil.escapeHtml(r.getNombreNino()) %></td>
-			<td><%= HtmlUtil.escapeHtml(r.getMonster() != null ? r.getMonster().getNombre() : "") %></td>
-			<td><%= HtmlUtil.escapeHtml(r.getPuerta() != null ? r.getPuerta().getNumero() : "") %></td>
-			<td><%= HtmlUtil.escapeHtml(r.getPuerta() != null && r.getPuerta().getPuesto() != null ? r.getPuerta().getPuesto().getNombre() : "") %></td>
-			<td><%= r.getEnergiaGenerada() %></td>
-			<td>
-				<a href="<%= request.getContextPath() %>/resultado?id=<%= r.getId() %>">Editar</a>
-				<button type="button" onclick="eliminar('<%= r.getId() %>')">Eliminar</button>
-			</td>
-		</tr>
-		<%
-				}
-			}
-		%>
-	</table>
+<%
+	LinkedList<Resultado> resultados = (LinkedList<Resultado>) request.getAttribute("resultados");
+	if (resultados == null || resultados.isEmpty()) {
+%>
+	<div class="empty-state">
+		<i data-lucide="file-text" class="empty-state-icon"></i>
+		<p>No hay resultados cargados todavia.</p>
+	</div>
+<%
+	} else {
+%>
+	<div class="table-wrapper mt-3">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Fecha</th>
+					<th>Nino</th>
+					<th>Monstruo</th>
+					<th>Puesto</th>
+					<th>Puerta</th>
+					<th>Energia</th>
+					<th>Acciones</th>
+				</tr>
+			</thead>
+			<tbody>
+				<%
+					for (Resultado r : resultados) {
+						PuertaAsignada da = r.getPuertaAsignada();
+						PuestoAsignado pa = da != null ? da.getPuestoAsignado() : null;
+						String monstruo = pa != null && pa.getMonster() != null ? pa.getMonster().getNombre() : "";
+						String puesto = pa != null && pa.getPuesto() != null ? pa.getPuesto().getNombre() : "";
+						String puerta = da != null && da.getPuerta() != null ? da.getPuerta().getNumero() : "";
+				%>
+				<tr>
+					<td><%= r.getId() %></td>
+					<td><%= r.getFechaFormateada() %></td>
+					<td><%= HtmlUtil.escapeHtml(r.getNombreNino()) %></td>
+					<td><%= HtmlUtil.escapeHtml(monstruo) %></td>
+					<td><%= HtmlUtil.escapeHtml(puesto) %></td>
+					<td><%= HtmlUtil.escapeHtml(puerta) %></td>
+					<td><%= r.getEnergiaGenerada() %></td>
+					<td class="actions">
+						<a href="<%= ctx %>/resultado?id=<%= r.getId() %>" class="btn btn-ghost">
+							<i data-lucide="pencil" class="icon-sm"></i>
+							Editar
+						</a>
+						<button type="button" class="btn btn-danger" onclick="eliminar('<%= r.getId() %>')">
+							<i data-lucide="trash-2" class="icon-sm"></i>
+							Eliminar
+						</button>
+					</td>
+				</tr>
+				<%
+					}
+				%>
+			</tbody>
+		</table>
+	</div>
+<%
+	}
+%>
 
-	<script>
-		function eliminar(id) {
-			if (!confirm('Eliminar resultado #' + id + '?')) { return; }
-			fetch('<%= request.getContextPath() %>/resultado?id=' + id, { method: 'DELETE' })
-				.then(function() { location.href = '<%= request.getContextPath() %>/resultado'; });
-		}
-	</script>
-</body>
-</html>
+<script>
+	function eliminar(id) {
+		if (!confirm('Eliminar resultado #' + id + '?')) { return; }
+		fetch('<%= ctx %>/resultado?id=' + id, { method: 'DELETE' })
+			.then(function() { location.href = '<%= ctx %>/resultado'; });
+	}
+</script>
+
+<jsp:include page="/WEB-INF/includes/footer.jsp" />

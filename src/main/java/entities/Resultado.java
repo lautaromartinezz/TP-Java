@@ -8,8 +8,7 @@ public class Resultado {
 	private Date fecha;
 	private int energiaGenerada;
 	private String nombreNino;
-	private Monster monster;
-	private Puerta puerta;
+	private PuertaAsignada puertaAsignada;
 
 	public int getId() {
 		return id;
@@ -35,17 +34,11 @@ public class Resultado {
 	public void setNombreNino(String nombreNino) {
 		this.nombreNino = nombreNino;
 	}
-	public Monster getMonster() {
-		return monster;
+	public PuertaAsignada getPuertaAsignada() {
+		return puertaAsignada;
 	}
-	public void setMonster(Monster monster) {
-		this.monster = monster;
-	}
-	public Puerta getPuerta() {
-		return puerta;
-	}
-	public void setPuerta(Puerta puerta) {
-		this.puerta = puerta;
+	public void setPuertaAsignada(PuertaAsignada puertaAsignada) {
+		this.puertaAsignada = puertaAsignada;
 	}
 
 	public String getFechaFormateada() {
@@ -61,6 +54,6 @@ public class Resultado {
 	@Override
 	public String toString() {
 		return "\nResultado [id=" + id + ", fecha=" + fecha + ", energiaGenerada=" + energiaGenerada
-				+ ", nombreNino=" + nombreNino + ", monster=" + monster + ", puerta=" + puerta + "]";
+				+ ", nombreNino=" + nombreNino + ", puertaAsignada=" + puertaAsignada + "]";
 	}
 }

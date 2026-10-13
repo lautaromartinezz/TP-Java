@@ -4,7 +4,9 @@ import java.util.LinkedList;
 
 import entities.Monster;
 import entities.Puesto;
+import entities.PuestoAsignado;
 import entities.Puerta;
+import entities.PuertaAsignada;
 import entities.Resultado;
 
 import java.sql.*;
@@ -12,14 +14,17 @@ import java.sql.*;
 public class DataResultado {
 
 	private static final String SELECT_BASE =
-		"select r.id, r.fecha, r.energia_generada, r.nombre_nino, r.id_monster, r.id_puerta, "
+		"select r.id, r.fecha, r.energia_generada, r.nombre_nino, r.id_puerta_asignada, "
+		+ "pa.fecha as pa_fecha, pa.id_monster, pa.id_puesto, da.id_puesto_asignado, "
 		+ "m.nombre as monster_nombre, "
-		+ "p.numero as puerta_numero, p.id_puesto, "
-		+ "pu.nombre as puesto_nombre, pu.descripcion as puesto_descripcion "
+		+ "p.nombre as puesto_nombre, p.descripcion as puesto_descripcion, "
+		+ "d.id as id_puerta, d.numero as puerta_numero "
 		+ "from resultado r "
-		+ "inner join monster m on m.id = r.id_monster "
-		+ "inner join puerta p on p.id = r.id_puerta "
-		+ "inner join puesto pu on pu.id = p.id_puesto ";
+		+ "inner join puerta_asignada da on da.id = r.id_puerta_asignada "
+		+ "inner join puesto_asignado pa on pa.id = da.id_puesto_asignado "
+		+ "inner join monster m on m.id = pa.id_monster "
+		+ "inner join puesto p on p.id = pa.id_puesto "
+		+ "inner join puerta d on d.id = da.id_puerta ";
 
 	private Resultado Map(ResultSet rs) throws SQLException {
 		Resultado r = new Resultado();
@@ -31,18 +36,27 @@ public class DataResultado {
 		Monster monster = new Monster();
 		monster.setId(rs.getInt("id_monster"));
 		monster.setNombre(rs.getString("monster_nombre"));
-		r.setMonster(monster);
 
 		Puesto puesto = new Puesto();
 		puesto.setId(rs.getInt("id_puesto"));
 		puesto.setNombre(rs.getString("puesto_nombre"));
 		puesto.setDescripcion(rs.getString("puesto_descripcion"));
 
+		PuestoAsignado pa = new PuestoAsignado();
+		pa.setId(rs.getInt("id_puesto_asignado"));
+		pa.setFecha(rs.getDate("pa_fecha"));
+		pa.setMonster(monster);
+		pa.setPuesto(puesto);
+
 		Puerta puerta = new Puerta();
 		puerta.setId(rs.getInt("id_puerta"));
 		puerta.setNumero(rs.getString("puerta_numero"));
-		puerta.setPuesto(puesto);
-		r.setPuerta(puerta);
+
+		PuertaAsignada da = new PuertaAsignada();
+		da.setId(rs.getInt("id_puerta_asignada"));
+		da.setPuestoAsignado(pa);
+		da.setPuerta(puerta);
+		r.setPuertaAsignada(da);
 
 		return r;
 	}
@@ -110,12 +124,11 @@ public class DataResultado {
 		PreparedStatement pstmt=null;
 		try {
 			pstmt = DbConnector.getInstancia().getConn().prepareStatement(
-				"insert into resultado (fecha, energia_generada, nombre_nino, id_monster, id_puerta) values (?, ?, ?, ?, ?)");
-			pstmt.setTimestamp(1, new Timestamp(r.getFecha().getTime()));
-			pstmt.setInt(2, r.getEnergiaGenerada());
-			pstmt.setString(3, r.getNombreNino());
-			pstmt.setInt(4, r.getMonster().getId());
-			pstmt.setInt(5, r.getPuerta().getId());
+				"insert into resultado (id_puerta_asignada, fecha, energia_generada, nombre_nino) values (?, ?, ?, ?)");
+			pstmt.setInt(1, r.getPuertaAsignada().getId());
+			pstmt.setTimestamp(2, new Timestamp(r.getFecha().getTime()));
+			pstmt.setInt(3, r.getEnergiaGenerada());
+			pstmt.setString(4, r.getNombreNino());
 			pstmt.executeUpdate();
 			
 		}catch (SQLException e) {
@@ -135,13 +148,12 @@ public class DataResultado {
 		PreparedStatement pstmt=null;
 		try {
 			pstmt = DbConnector.getInstancia().getConn().prepareStatement(
-				"update resultado set fecha = ?, energia_generada = ?, nombre_nino = ?, id_monster = ?, id_puerta = ? where id = ?");
-			pstmt.setTimestamp(1, new Timestamp(r.getFecha().getTime()));
-			pstmt.setInt(2, r.getEnergiaGenerada());
-			pstmt.setString(3, r.getNombreNino());
-			pstmt.setInt(4, r.getMonster().getId());
-			pstmt.setInt(5, r.getPuerta().getId());
-			pstmt.setInt(6, r.getId());
+				"update resultado set id_puerta_asignada = ?, fecha = ?, energia_generada = ?, nombre_nino = ? where id = ?");
+			pstmt.setInt(1, r.getPuertaAsignada().getId());
+			pstmt.setTimestamp(2, new Timestamp(r.getFecha().getTime()));
+			pstmt.setInt(3, r.getEnergiaGenerada());
+			pstmt.setString(4, r.getNombreNino());
+			pstmt.setInt(5, r.getId());
 			pstmt.executeUpdate();
 			
 		}catch (SQLException e) {

@@ -6,11 +6,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 
-import controller.ControllerMonster;
-import controller.ControllerPuerta;
+import controller.ControllerPuertaAsignada;
 import controller.ControllerResultado;
-import entities.Monster;
-import entities.Puerta;
+import entities.PuertaAsignada;
 import entities.Resultado;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -145,30 +143,19 @@ public class ResultadoServlet extends HttpServlet {
 			return false;
 		}
 
-		Integer idMonster = ParsePositiveInt(request.getParameter("id_monster"));
-		if (idMonster == null) {
+		Integer idPuertaAsignada = ParsePositiveInt(request.getParameter("id_puerta_asignada"));
+		if (idPuertaAsignada == null) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'id_monster' is required");
+			response.getWriter().println("Parameter 'id_puerta_asignada' is required");
 			return false;
 		}
 
-		Integer idPuerta = ParsePositiveInt(request.getParameter("id_puerta"));
-		if (idPuerta == null) {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'id_puerta' is required");
-			return false;
-		}
-
-		Monster monster = new Monster();
-		monster.setId(idMonster);
-
-		Puerta puerta = new Puerta();
-		puerta.setId(idPuerta);
+		PuertaAsignada puertaAsignada = new PuertaAsignada();
+		puertaAsignada.setId(idPuertaAsignada);
 
 		r.setFecha(fecha);
 		r.setNombreNino(nombreNino);
-		r.setMonster(monster);
-		r.setPuerta(puerta);
+		r.setPuertaAsignada(puertaAsignada);
 
 		Integer energia = ParsePositiveInt(request.getParameter("energia_generada"));
 		r.setEnergiaGenerada(energia != null ? energia : 0);
@@ -203,10 +190,8 @@ public class ResultadoServlet extends HttpServlet {
 	}
 
 	private void LoadCombos(HttpServletRequest request) {
-		ControllerMonster cm = new ControllerMonster();
-		ControllerPuerta cp = new ControllerPuerta();
-		request.setAttribute("monsters", cm.GetAll());
-		request.setAttribute("puertas", cp.GetAll());
+		ControllerPuertaAsignada cda = new ControllerPuertaAsignada();
+		request.setAttribute("puertasAsignadas", cda.GetAll());
 	}
 
 	private void InitResponse(HttpServletResponse response) {
