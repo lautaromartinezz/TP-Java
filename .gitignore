@@ -21,3 +21,5 @@ target/
 *.log
 node_modules/
 .metadata/
+.playwright-cli/
+dashboard-icons.png
