@@ -51,7 +51,9 @@ public class DataMonster {
 			rs = stmt.executeQuery(
 				"select m.id, m.nombre, coalesce(sum(r.energia_generada), 0) as energia_total "
 				+ "from monster m "
-				+ "left join resultado r on r.id_monster = m.id "
+				+ "left join puesto_asignado pa on pa.id_monster = m.id "
+				+ "left join puerta_asignada da on da.id_puesto_asignado = pa.id "
+				+ "left join resultado r on r.id_puerta_asignada = da.id "
 				+ "group by m.id, m.nombre "
 				+ "order by energia_total desc, m.nombre asc");
 
