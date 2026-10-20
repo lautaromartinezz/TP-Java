@@ -129,13 +129,18 @@ public class DataPuestoAsignado {
 	
 	public void Add(PuestoAsignado pa) {
 		PreparedStatement pstmt=null;
+		ResultSet keyResultSet = null;
 		try {
-			pstmt = DbConnector.getInstancia().getConn().prepareStatement(
-				"insert into puesto_asignado (id_monster, id_puesto, fecha) values (?, ?, ?)");
-			pstmt.setInt(1, pa.getMonster().getId());
-			pstmt.setInt(2, pa.getPuesto().getId());
+			String query = "INSERT INTO puesto_asignado (id_puesto, id_monster, fecha) VALUES (?, ?, ?)";
+			pstmt = DbConnector.getInstancia().getConn().prepareStatement(query, PreparedStatement.RETURN_GENERATED_KEYS);
+			pstmt.setInt(1, pa.getPuesto().getId());
+			pstmt.setInt(2, pa.getMonster().getId());
 			pstmt.setDate(3, new Date(pa.getFecha().getTime()));
 			pstmt.executeUpdate();
+			keyResultSet = pstmt.getGeneratedKeys();
+			if (keyResultSet != null && keyResultSet.next()) {
+				pa.setId(keyResultSet.getInt(1));
+			}
 			
 		}catch (SQLException e) {
 			e.printStackTrace();
@@ -148,6 +153,94 @@ public class DataPuestoAsignado {
 				e.printStackTrace();
 			}
 		}
+	}
+	public java.util.HashMap<Integer, Integer> getMonstruosDelDia(java.sql.Date fecha) {
+		java.util.HashMap<Integer, Integer> mapa = new java.util.HashMap<>();
+		java.sql.PreparedStatement pstmt = null;
+		java.sql.ResultSet rs = null;
+		try {
+			String query = "SELECT id_puesto, id_monster FROM puesto_asignado WHERE fecha = ?";
+			pstmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+			pstmt.setDate(1, fecha);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				mapa.put(rs.getInt("id_puesto"), rs.getInt("id_monster"));
+			}
+		} catch (java.sql.SQLException e) { e.printStackTrace(); } 
+		finally { try { if(rs!=null) rs.close(); if(pstmt!=null) pstmt.close(); DbConnector.getInstancia().releaseConn(); } catch(Exception e) {} }
+		return mapa;
+	}
+
+	public java.util.HashMap<Integer, java.util.LinkedList<entities.Puerta>> getPuertasDelDia(java.sql.Date fecha) {
+		java.util.HashMap<Integer, java.util.LinkedList<entities.Puerta>> mapa = new java.util.HashMap<>();
+		java.sql.PreparedStatement pstmt = null;
+		java.sql.ResultSet rs = null;
+		try {
+			String query = "SELECT pa.id_puesto, p.id as id_puerta, p.numero as numero_puerta " +
+						   "FROM puerta_asignada pua " +
+						   "INNER JOIN puesto_asignado pa ON pua.id_puesto_asignado = pa.id " +
+						   "INNER JOIN puerta p ON pua.id_puerta = p.id " +
+						   "WHERE pa.fecha = ?";
+			pstmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+			pstmt.setDate(1, fecha);
+			rs = pstmt.executeQuery();
+			while (rs.next()) {
+				int idPuesto = rs.getInt("id_puesto");
+				entities.Puerta puerta = new entities.Puerta();
+				puerta.setId(rs.getInt("id_puerta"));
+				puerta.setNumero(rs.getString("numero_puerta"));
+				
+				if(!mapa.containsKey(idPuesto)) {
+					mapa.put(idPuesto, new java.util.LinkedList<>());
+				}
+				mapa.get(idPuesto).add(puerta);
+			}
+		} catch (java.sql.SQLException e) { e.printStackTrace(); } 
+		finally { try { if(rs!=null) rs.close(); if(pstmt!=null) pstmt.close(); DbConnector.getInstancia().releaseConn(); } catch(Exception e) {} }
+		return mapa;
+	}
+
+	public int UpdateMonstruo(PuestoAsignado pa) {
+		java.sql.Connection conn = null;
+		java.sql.PreparedStatement pstmt = null;
+		try {
+			conn = DbConnector.getInstancia().getConn();
+			java.sql.Date fechaSql = new java.sql.Date(pa.getFecha().getTime());
+
+			String sql0 = "DELETE FROM resultado WHERE id_puerta_asignada IN (SELECT id FROM puerta_asignada WHERE id_puesto_asignado IN (SELECT id FROM puesto_asignado WHERE id_puesto = ? AND fecha = ?))";
+			pstmt = conn.prepareStatement(sql0);
+			pstmt.setInt(1, pa.getPuesto().getId());
+			pstmt.setDate(2, fechaSql);
+			pstmt.executeUpdate();
+			pstmt.close();
+
+
+			String sql1 = "DELETE FROM puerta_asignada WHERE id_puesto_asignado IN (SELECT id FROM puesto_asignado WHERE id_puesto = ? AND fecha = ?)";
+			pstmt = conn.prepareStatement(sql1);
+			pstmt.setInt(1, pa.getPuesto().getId());
+			pstmt.setDate(2, fechaSql);
+			int puertasBorradas = pstmt.executeUpdate();
+			pstmt.close();
+			System.out.println("-> [BULLDOZER] Puertas viejas aniquiladas: " + puertasBorradas);
+
+	
+			String sql2 = "DELETE FROM puesto_asignado WHERE id_puesto = ? AND fecha = ?";
+			pstmt = conn.prepareStatement(sql2);
+			pstmt.setInt(1, pa.getPuesto().getId());
+			pstmt.setDate(2, fechaSql);
+			int turnosBorrados = pstmt.executeUpdate();
+			pstmt.close();
+			System.out.println("-> [BULLDOZER] Turnos viejos aniquilados: " + turnosBorrados);
+
+		} catch (java.sql.SQLException e) {
+			System.out.println("-> [ERROR SQL]: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			try { if(pstmt!=null) pstmt.close(); DbConnector.getInstancia().releaseConn(); } catch(Exception e) {}
+		}
+		
+
+		return 0; 
 	}
 	
 	public void Update(PuestoAsignado pa) {

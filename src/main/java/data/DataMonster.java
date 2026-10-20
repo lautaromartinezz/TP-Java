@@ -97,14 +97,15 @@ public class DataMonster {
 					Monster m = new Monster();
 					m.setId(rs.getInt("id"));
 					m.setNombre(rs.getString("nombre"));
+					m.setLegajo(rs.getInt("legajo"));
+					m.setPassword(rs.getString("password"));
+					m.setRol(rs.getString("rol"));
 					
 					mon = m;
 				}
 			}
-			
 		}catch (SQLException e) {
 			e.printStackTrace();
-			
 		} finally {
 			try {
 				if(rs!=null) {rs.close();}
@@ -118,31 +119,59 @@ public class DataMonster {
 	}
 	
 	public void Add(Monster m) {
-		PreparedStatement pstmt=null;
+		PreparedStatement pstmtInsert = null;
+		PreparedStatement pstmtUpdate = null;
+		ResultSet keyResultSet = null;
+		
 		try {
-			pstmt = DbConnector.getInstancia().getConn().prepareStatement("insert into monster (nombre) values (?)");
-			pstmt.setString(1, m.getNombre());
-			pstmt.executeUpdate();
+			String insertQuery = "INSERT INTO monster (nombre, legajo, password, rol) VALUES (?, 0, ?, ?)";
+			pstmtInsert = DbConnector.getInstancia().getConn().prepareStatement(insertQuery, PreparedStatement.RETURN_GENERATED_KEYS);
+			pstmtInsert.setString(1, m.getNombre());
+			pstmtInsert.setString(2, m.getPassword());
+			pstmtInsert.setString(3, m.getRol());
 			
-		}catch (SQLException e) {
+			pstmtInsert.executeUpdate();
+
+			keyResultSet = pstmtInsert.getGeneratedKeys();
+			if (keyResultSet != null && keyResultSet.next()) {
+				int nuevoId = keyResultSet.getInt(1);
+				m.setId(nuevoId);
+				int legajoReal = nuevoId * 1000; 
+				m.setLegajo(legajoReal);
+				
+				String updateQuery = "UPDATE monster SET legajo = ? WHERE id = ?";
+				pstmtUpdate = DbConnector.getInstancia().getConn().prepareStatement(updateQuery);
+				pstmtUpdate.setInt(1, legajoReal);
+				pstmtUpdate.setInt(2, nuevoId);
+				pstmtUpdate.executeUpdate();
+			}
+			
+		} catch (SQLException e) {
 			e.printStackTrace();
-			
 		} finally {
 			try {
-				if(pstmt!=null) {pstmt.close();}
+				if(keyResultSet != null) { keyResultSet.close(); }
+				if(pstmtInsert != null) { pstmtInsert.close(); }
+				if(pstmtUpdate != null) { pstmtUpdate.close(); }
 				DbConnector.getInstancia().releaseConn();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
-	}
+	}	
 	
 	public void Update(Monster m) {
 		PreparedStatement pstmt=null;
 		try {
-			pstmt = DbConnector.getInstancia().getConn().prepareStatement("update monster set nombre = ? where id = ?");
+
+			String query = "UPDATE monster SET nombre = ?, password = ?, rol = ? WHERE id = ?";
+			pstmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+			
 			pstmt.setString(1, m.getNombre());
-			pstmt.setInt(2, m.getId());
+			pstmt.setString(2, m.getPassword());
+			pstmt.setString(3, m.getRol());
+			pstmt.setInt(4, m.getId());
+			
 			pstmt.executeUpdate();
 			
 		}catch (SQLException e) {
@@ -157,24 +186,125 @@ public class DataMonster {
 			}
 		}
 	}
-	
+	public Monster login(int legajo, String password) {
+	    Monster m = null;
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT * FROM monster WHERE legajo = ? AND password = ?";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, legajo);
+	        stmt.setString(2, password);
+	        rs = stmt.executeQuery();
+
+	        if (rs.next()) {
+	            m = new Monster();
+	            m.setId(rs.getInt("id"));
+	            m.setLegajo(rs.getInt("legajo"));
+	            m.setNombre(rs.getString("nombre"));
+	            m.setRol(rs.getString("rol")); 
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        try {
+	            if (rs != null) rs.close();
+	            if (stmt != null) stmt.close();
+	            DbConnector.getInstancia().releaseConn();
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    return m;
+	}
 	public void Delete(int id) {
-		PreparedStatement pstmt=null;
+		PreparedStatement pstmtResultados = null;
+		PreparedStatement pstmtPuertas = null;
+		PreparedStatement pstmtPuestos = null;
+		PreparedStatement pstmtMiedos = null;
+		PreparedStatement pstmtMonster = null;
+		
 		try {
-			pstmt = DbConnector.getInstancia().getConn().prepareStatement("delete from monster where id = ?");
-			pstmt.setInt(1, id);
-			pstmt.executeUpdate();
+			String qResultados = "DELETE FROM resultado WHERE id_puerta_asignada IN (SELECT id FROM puerta_asignada WHERE id_puesto_asignado IN (SELECT id FROM puesto_asignado WHERE id_monster = ?))";
+			pstmtResultados = DbConnector.getInstancia().getConn().prepareStatement(qResultados);
+			pstmtResultados.setInt(1, id);
+			pstmtResultados.executeUpdate();
+			String qPuertas = "DELETE FROM puerta_asignada WHERE id_puesto_asignado IN (SELECT id FROM puesto_asignado WHERE id_monster = ?)";
+			pstmtPuertas = DbConnector.getInstancia().getConn().prepareStatement(qPuertas);
+			pstmtPuertas.setInt(1, id);
+			pstmtPuertas.executeUpdate();
+			String qPuestos = "DELETE FROM puesto_asignado WHERE id_monster = ?";
+			pstmtPuestos = DbConnector.getInstancia().getConn().prepareStatement(qPuestos);
+			pstmtPuestos.setInt(1, id);
+			pstmtPuestos.executeUpdate();
+			String qMiedos = "DELETE FROM monster_miedo WHERE id_monster = ?";
+			pstmtMiedos = DbConnector.getInstancia().getConn().prepareStatement(qMiedos);
+			pstmtMiedos.setInt(1, id);
+			pstmtMiedos.executeUpdate();
+
+			String qMonster = "DELETE FROM monster WHERE id = ?";
+			pstmtMonster = DbConnector.getInstancia().getConn().prepareStatement(qMonster);
+			pstmtMonster.setInt(1, id);
+			pstmtMonster.executeUpdate();
 			
-		}catch (SQLException e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
-			
 		} finally {
 			try {
-				if(pstmt!=null) {pstmt.close();}
+				if(pstmtResultados != null) { pstmtResultados.close(); }
+				if(pstmtPuertas != null) { pstmtPuertas.close(); }
+				if(pstmtPuestos != null) { pstmtPuestos.close(); }
+				if(pstmtMiedos != null) { pstmtMiedos.close(); }
+				if(pstmtMonster != null) { pstmtMonster.close(); }
 				DbConnector.getInstancia().releaseConn();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
 		}
 	}
+    public LinkedList<Integer> getMiedosAsignados(int idMonster) {
+        LinkedList<Integer> miedos = new LinkedList<>();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            String query = "SELECT id_miedo FROM monster_miedo WHERE id_monster=?";
+            stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+            stmt.setInt(1, idMonster);
+            rs = stmt.executeQuery();
+            while(rs.next()) {
+                miedos.add(rs.getInt("id_miedo"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if(rs!=null) rs.close(); if(stmt!=null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (SQLException e) { }
+        }
+        return miedos;
+    }
+
+  
+    public void actualizarMiedos(int idMonster, String[] idMiedos) {
+        PreparedStatement stmt = null;
+        try {
+            String delete = "DELETE FROM monster_miedo WHERE id_monster=?";
+            stmt = DbConnector.getInstancia().getConn().prepareStatement(delete);
+            stmt.setInt(1, idMonster);
+            stmt.executeUpdate();
+            stmt.close();
+
+            if (idMiedos != null && idMiedos.length > 0) {
+                String insert = "INSERT INTO monster_miedo (id_monster, id_miedo) VALUES (?, ?)";
+                stmt = DbConnector.getInstancia().getConn().prepareStatement(insert);
+                for (String idMiedo : idMiedos) {
+                    stmt.setInt(1, idMonster);
+                    stmt.setInt(2, Integer.parseInt(idMiedo));
+                    stmt.executeUpdate();
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            try { if(stmt!=null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch(Exception e) {}
+        }
+    }
 }

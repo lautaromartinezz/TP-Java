@@ -26,7 +26,19 @@ public class ResultadoServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerResultado cr = new ControllerResultado();
-
+		String rol = (String) request.getAttribute("rolUsuario");
+		
+	    // UN SOLO BLOQUE PARA EL MONSTRUO CON LA RUTA CORRECTA
+	    if ("monstruo".equalsIgnoreCase(rol)) {
+            Integer idMonstruo = (Integer) request.getAttribute("idMonstruo");
+            ControllerPuertaAsignada cpa = new ControllerPuertaAsignada();
+            request.setAttribute("listaAsignaciones", cpa.getAllAsignaciones(idMonstruo));
+            
+            request.getRequestDispatcher("/monster/asignaciones-monstruo.jsp").forward(request, response);
+            return;
+        }
+	    
+	    // --- DE AQUÍ PARA ABAJO SIGUE EL CÓDIGO DEL ADMIN ---
 		String newParam = request.getParameter("new");
 		if (newParam != null) {
 			LoadCombos(request);
@@ -64,11 +76,38 @@ public class ResultadoServlet extends HttpServlet {
 		LoadCombos(request);
 		request.getRequestDispatcher("/resultado/form.jsp").forward(request, response);
 	}
-
+	
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerResultado cr = new ControllerResultado();
-
 		InitResponse(response);
+
+		String action = request.getParameter("action");
+		
+		if ("insert".equals(action)) {
+			try {
+				int idPuertaAsignada = Integer.parseInt(request.getParameter("id_puerta_asignada"));
+				int energia = Integer.parseInt(request.getParameter("energia_generada"));
+
+				Resultado res = new Resultado();
+				PuertaAsignada pa = new PuertaAsignada();
+				pa.setId(idPuertaAsignada);
+				
+				res.setPuertaAsignada(pa);
+				res.setEnergiaGenerada(energia);
+				res.setFecha(new Date()); 
+				res.setNombreNino("No especificado (Susto Rápido)"); 
+
+				cr.Add(res);
+				
+				response.sendRedirect(request.getContextPath() + "/dashboard");
+				return; 
+
+			} catch (Exception e) {
+				e.printStackTrace();
+				response.sendRedirect(request.getContextPath() + "/dashboard?error=1");
+				return;
+			}
+		}
 
 		Resultado r = new Resultado();
 		if (!Fill(request, response, r)) { return; }

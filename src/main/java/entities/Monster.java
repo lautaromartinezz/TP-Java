@@ -4,8 +4,32 @@ public class Monster {
 	private int id;
 	private String nombre;
 	private int energiaTotal;
+
+	private int legajo;
+    private String password;
+    private String rol;
 	
-	
+    
+	public int getLegajo() {
+		return legajo;
+	}
+	public void setLegajo(int legajo) {
+		this.legajo = legajo;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getRol() {
+		return rol;
+	}
+	public void setRol(String rol) {
+		this.rol = rol;
+	}
+
+
 	public int getId() {
 		return id;
 	}

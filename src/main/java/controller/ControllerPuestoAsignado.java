@@ -1,5 +1,6 @@
 package controller;
 
+import java.sql.Date;
 import java.util.LinkedList;
 
 import data.DataPuestoAsignado;
@@ -14,6 +15,9 @@ public class ControllerPuestoAsignado {
 	
 	public PuestoAsignado GetOne(int id){
 		return dpa.GetOne(id);
+	}
+	public int UpdateMonstruo(PuestoAsignado pa) {
+		return dpa.UpdateMonstruo(pa);
 	}
 
 	public boolean AsignacionValida(PuestoAsignado pa) {
@@ -30,5 +34,13 @@ public class ControllerPuestoAsignado {
 	
 	public void Delete(int id) {
 		dpa.Delete(id);
+	}
+
+	public java.util.HashMap<Integer, Integer> getMonstruosDelDia(java.sql.Date fecha) {
+		return dpa.getMonstruosDelDia(fecha); // dpa o como se llame tu variable Data
+	}
+
+	public java.util.HashMap<Integer, java.util.LinkedList<entities.Puerta>> getPuertasDelDia(java.sql.Date fecha) {
+		return dpa.getPuertasDelDia(fecha);
 	}
 }

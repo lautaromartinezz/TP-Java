@@ -27,4 +27,15 @@ public class ControllerPuerta {
 	public void Delete(int id) {
 		dp.Delete(id);
 	}
+	public LinkedList<Integer> getMiedosAsignados(int idPuerta) {
+		return dp.getMiedosAsignados(idPuerta);
+	}
+
+	public void actualizarMiedos(int idPuerta, String[] idMiedos) {
+		dp.actualizarMiedos(idPuerta, idMiedos);
+	}
+
+	public java.util.HashMap<Integer, LinkedList<Puerta>> getTodasLasPuertasCompatibles() {
+		return dp.getTodasLasPuertasCompatibles();
+	}
 }

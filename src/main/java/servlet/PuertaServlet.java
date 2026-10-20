@@ -20,14 +20,15 @@ public class PuertaServlet extends HttpServlet {
 	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		ControllerPuerta cp = new ControllerPuerta();
+ControllerPuerta cp = new ControllerPuerta();
+		controller.ControllerMiedo cMiedo = new controller.ControllerMiedo();
 
 		String newParam = request.getParameter("new");
 		if (newParam != null) {
+			request.setAttribute("listaMiedos", cMiedo.GetAll());
 			request.getRequestDispatcher("/puerta/form.jsp").forward(request, response);
 			return;
 		}
-
 		Integer id = ParseId(request, response);
 		if (id == null) { return; }
 
@@ -47,6 +48,8 @@ public class PuertaServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("puerta", p);
+		request.setAttribute("listaMiedos", cMiedo.GetAll()); 
+		request.setAttribute("miedosAsignados", cp.getMiedosAsignados(id));
 		request.getRequestDispatcher("/puerta/form.jsp").forward(request, response);
 	}
 
@@ -65,6 +68,12 @@ public class PuertaServlet extends HttpServlet {
 		Puerta p = new Puerta();
 		p.setNumero(numero);
 		cp.Add(p);
+		String[] miedosSeleccionados = request.getParameterValues("miedos");
+		if (miedosSeleccionados == null) {
+			miedosSeleccionados = new String[0]; 
+		}
+
+		cp.actualizarMiedos(p.getId(), miedosSeleccionados);
 
 		response.sendRedirect(request.getContextPath() + "/puerta");
 	}
@@ -98,6 +107,13 @@ public class PuertaServlet extends HttpServlet {
 
 		p.setNumero(numero);
 		cp.Update(p);
+		String[] miedosSeleccionados = request.getParameterValues("miedos");
+		if (miedosSeleccionados == null) {
+			miedosSeleccionados = new String[0];
+		}
+
+		cp.actualizarMiedos(p.getId(), miedosSeleccionados);
+		
 
 		response.sendRedirect(request.getContextPath() + "/puerta");
 	}

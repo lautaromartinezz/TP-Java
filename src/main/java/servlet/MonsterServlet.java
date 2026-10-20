@@ -21,20 +21,27 @@ public class MonsterServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerMonster cm = new ControllerMonster();
+		controller.ControllerMiedo cMiedo = new controller.ControllerMiedo();
 
 		String newParam = request.getParameter("new");
 		if (newParam != null) {
+			String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+			StringBuilder pass = new StringBuilder(8);
+			java.util.Random rnd = new java.util.Random();
+			for (int i = 0; i < 8; i++) {
+				pass.append(chars.charAt(rnd.nextInt(chars.length())));
+			}
+			request.setAttribute("generatedPassword", pass.toString());
+			request.setAttribute("listaMiedos", cMiedo.GetAll());
 			request.getRequestDispatcher("/monster/form.jsp").forward(request, response);
 			return;
 		}
-
 		String rankingParam = request.getParameter("ranking");
 		if (rankingParam != null) {
 			request.setAttribute("monsters", cm.GetRanking());
 			request.getRequestDispatcher("/monster/ranking.jsp").forward(request, response);
 			return;
 		}
-
 		Integer id = ParseId(request, response);
 		if (id == null) { return; }
 
@@ -44,7 +51,6 @@ public class MonsterServlet extends HttpServlet {
 			request.getRequestDispatcher("/monster/list.jsp").forward(request, response);
 			return;
 		}
-
 		Monster m = cm.GetOne(id);
 		if (m.getId() == 0) {
 			request.setAttribute("error", "Monster not found [id=" + id + "]");
@@ -54,31 +60,44 @@ public class MonsterServlet extends HttpServlet {
 			return;
 		}
 		request.setAttribute("monster", m);
+		request.setAttribute("listaMiedos", cMiedo.GetAll());
+		request.setAttribute("miedosAsignados", cm.getMiedosAsignados(id));
+		
 		request.getRequestDispatcher("/monster/form.jsp").forward(request, response);
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerMonster cm = new ControllerMonster();
-
 		InitResponse(response);
 
 		String name = request.getParameter("nombre");
-		if (name == null || name.isEmpty()) {
+		String password = request.getParameter("password");
+		String rol = request.getParameter("rol");
+
+		if (name == null || name.isEmpty() || password == null || rol == null) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'nombre' is required");
+			response.getWriter().println("Faltan campos obligatorios");
 			return;
 		}
 
 		Monster m = new Monster();
 		m.setNombre(name);
-		cm.Add(m);
-
+		m.setPassword(password); 
+		m.setRol(rol);          
+		
+		cm.Add(m); 
+		
+		String[] miedosSeleccionados = request.getParameterValues("miedos");
+		if (miedosSeleccionados == null) {
+			miedosSeleccionados = new String[0];
+		}
+		
+		cm.actualizarMiedos(m.getId(), miedosSeleccionados);
+		
 		response.sendRedirect(request.getContextPath() + "/monster");
 	}
-
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerMonster cm = new ControllerMonster();
-
 		InitResponse(response);
 
 		Integer id = ParseIdText(request, response);
@@ -88,11 +107,13 @@ public class MonsterServlet extends HttpServlet {
 			response.getWriter().println("Parameter 'id' is required");
 			return;
 		}
-
 		String name = request.getParameter("nombre");
-		if (name == null || name.isEmpty()) {
+		String password = request.getParameter("password");
+		String rol = request.getParameter("rol");
+
+		if (name == null || name.isEmpty() || password == null || rol == null) {
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-			response.getWriter().println("Parameter 'nombre' is required");
+			response.getWriter().println("Faltan campos obligatorios");
 			return;
 		}
 
@@ -102,13 +123,20 @@ public class MonsterServlet extends HttpServlet {
 			response.getWriter().println("Monster not found [id=" + id + "]");
 			return;
 		}
-
 		m.setNombre(name);
+		m.setPassword(password);
+		m.setRol(rol);
+		
 		cm.Update(m);
+		
+		String[] miedosSeleccionados = request.getParameterValues("miedos");
+		if (miedosSeleccionados == null) {
+			miedosSeleccionados = new String[0]; 
+		}
+		cm.actualizarMiedos(m.getId(), miedosSeleccionados);
 
 		response.sendRedirect(request.getContextPath() + "/monster");
 	}
-
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		ControllerMonster cm = new ControllerMonster();
 

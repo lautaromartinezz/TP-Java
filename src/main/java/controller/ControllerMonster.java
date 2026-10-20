@@ -24,11 +24,23 @@ public class ControllerMonster {
 		dm.Add(m);
 	}
 	
+	public Monster login(int legajo, String password) {
+	    DataMonster dm = new DataMonster();
+	    return dm.login(legajo, password);
+	}
+	
 	public void Update(Monster m) {
 		dm.Update(m);
 	}
 	
 	public void Delete(int id) {
 		dm.Delete(id);
+	}
+	public LinkedList<Integer> getMiedosAsignados(int idMonster) {
+	    return dm.getMiedosAsignados(idMonster);
+	}
+
+	public void actualizarMiedos(int idMonster, String[] idMiedos) {
+	    dm.actualizarMiedos(idMonster, idMiedos);
 	}
 }

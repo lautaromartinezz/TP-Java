@@ -1,5 +1,7 @@
 package data;
-
+import dto.AsignacionMonstruoDTO;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.LinkedList;
 
 import entities.Monster;
@@ -60,6 +62,73 @@ public class DataResultado {
 
 		return r;
 	}
+	public List<AsignacionMonstruoDTO> getTop3Historial(int idMonster) {
+	    List<AsignacionMonstruoDTO> lista = new ArrayList<>();
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT r.id AS idResultado, p.numero AS numeroPuerta, " +
+	                       "pu.nombre AS nombrePuesto, r.energia_generada, r.fecha " +
+	                       "FROM resultado r " +
+	                       "INNER JOIN puerta_asignada pa ON r.id_puerta_asignada = pa.id " +
+	                       "INNER JOIN puerta p ON pa.id_puerta = p.id " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "INNER JOIN puesto pu ON pas.id_puesto = pu.id " +
+	                       "WHERE pas.id_monster = ? " +
+	                       "ORDER BY r.fecha DESC LIMIT 3";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        while (rs.next()) {
+	            AsignacionMonstruoDTO dto = new AsignacionMonstruoDTO();
+	            dto.setIdAsignacion(rs.getInt("idResultado"));
+	            dto.setNumeroPuerta(rs.getString("numeroPuerta"));
+	            dto.setNombrePuesto(rs.getString("nombrePuesto"));
+	            dto.setEnergiaGenerada(rs.getInt("energia_generada"));
+	            dto.setFecha(rs.getTimestamp("fecha")); 
+	            dto.setEstado("Completado");
+	            lista.add(dto);
+	        }
+	    } catch (Exception e) { e.printStackTrace(); } 
+	    finally {
+	        try { if(rs!=null) rs.close(); if(stmt!=null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) {}
+	    }
+	    return lista;
+	}
+	public List<AsignacionMonstruoDTO> getHistorialSustos(int idMonster) {
+	    List<AsignacionMonstruoDTO> lista = new ArrayList<>();
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT r.id AS idResultado, p.numero AS numeroPuerta, " +
+	                       "pu.nombre AS nombrePuesto, r.energia_generada, r.fecha " +
+	                       "FROM resultado r " +
+	                       "INNER JOIN puerta_asignada pa ON r.id_puerta_asignada = pa.id " +
+	                       "INNER JOIN puerta p ON pa.id_puerta = p.id " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "INNER JOIN puesto pu ON pas.id_puesto = pu.id " +
+	                       "WHERE pas.id_monster = ? " +
+	                       "ORDER BY r.fecha DESC";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        while (rs.next()) {
+	            AsignacionMonstruoDTO dto = new AsignacionMonstruoDTO();
+	            dto.setIdAsignacion(rs.getInt("idResultado"));
+	            dto.setNumeroPuerta(rs.getString("numeroPuerta"));
+	            dto.setNombrePuesto(rs.getString("nombrePuesto"));
+	            dto.setEnergiaGenerada(rs.getInt("energia_generada"));
+	            dto.setFecha(rs.getTimestamp("fecha")); 
+	            dto.setEstado("Completado");
+	            lista.add(dto);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if(rs!=null) rs.close(); if(stmt!=null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) {}
+	    }
+	    return lista;
+	}
 
 	public LinkedList<Resultado> GetAll() {
 		Statement stmt=null;
@@ -119,7 +188,26 @@ public class DataResultado {
 		}
 		return resultado;
 	}
-	
+	public int sumarEnergiaTotal(int idMonster) {
+	    int total = 0;
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT SUM(r.energia_generada) AS total FROM resultado r " +
+	                       "INNER JOIN puerta_asignada pa ON r.id_puerta_asignada = pa.id " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "WHERE pas.id_monster = ?";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        if (rs.next()) { total = rs.getInt("total"); }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if (rs != null) rs.close(); if (stmt != null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) { e.printStackTrace(); }
+	    }
+	    return total;
+	}
 	public void Add(Resultado r) {
 		PreparedStatement pstmt=null;
 		try {

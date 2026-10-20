@@ -7,8 +7,15 @@ import entities.Puesto;
 import entities.PuestoAsignado;
 import entities.Puerta;
 import entities.PuertaAsignada;
-
+import dto.AsignacionMonstruoDTO;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.sql.*;
+import dto.AsignacionMonstruoDTO;
+import java.util.List;
+import data.DataPuertaAsignada;
 
 public class DataPuertaAsignada {
 
@@ -51,6 +58,45 @@ public class DataPuertaAsignada {
 
 		return da;
 	}
+	public List<AsignacionMonstruoDTO> getAllAsignaciones(int idMonster) {
+	    List<AsignacionMonstruoDTO> lista = new ArrayList<>();
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        // Usamos LEFT JOIN: trae todas las puertas asignadas, y si hay resultado, lo une.
+	        String query = "SELECT pa.id AS idAsignacion, p.numero AS numeroPuerta, " +
+	                       "pu.nombre AS nombrePuesto, r.energia_generada, r.fecha " +
+	                       "FROM puerta_asignada pa " +
+	                       "INNER JOIN puerta p ON pa.id_puerta = p.id " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "INNER JOIN puesto pu ON pas.id_puesto = pu.id " +
+	                       "LEFT JOIN resultado r ON r.id_puerta_asignada = pa.id " +
+	                       "WHERE pas.id_monster = ? " +
+	                       "ORDER BY pa.id DESC";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        
+	        while (rs.next()) {
+	            AsignacionMonstruoDTO dto = new AsignacionMonstruoDTO();
+	            dto.setIdAsignacion(rs.getInt("idAsignacion"));
+	            dto.setNumeroPuerta(rs.getString("numeroPuerta"));
+	            dto.setNombrePuesto(rs.getString("nombrePuesto"));
+	            if (rs.getObject("energia_generada") != null) {
+	                dto.setEnergiaGenerada(rs.getInt("energia_generada"));
+	                dto.setFecha(rs.getTimestamp("fecha"));
+	                dto.setEstado("Completada");
+	            } else {
+	                dto.setEstado("Pendiente");
+	            }
+	            lista.add(dto);
+	        }
+	    } catch (Exception e) { e.printStackTrace(); } 
+	    finally {
+	        try { if(rs!=null) rs.close(); if(stmt!=null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) {}
+	    }
+	    return lista;
+	}
 
 	public LinkedList<PuertaAsignada> GetAll() {
 		Statement stmt=null;
@@ -80,7 +126,72 @@ public class DataPuertaAsignada {
 		}
 		return puertas;
 	}
-	
+	public void DeleteByPuestoAsignado(int idPuestoAsignado) {
+	    java.sql.PreparedStatement pstmt = null;
+	    try {
+	        String sql = "DELETE FROM puerta_asignada WHERE id_puesto_asignado = ?";
+	        pstmt = DbConnector.getInstancia().getConn().prepareStatement(sql);
+	        pstmt.setInt(1, idPuestoAsignado);
+	        pstmt.executeUpdate();
+	    } catch (java.sql.SQLException e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if(pstmt!=null) pstmt.close(); DbConnector.getInstancia().releaseConn(); } catch(Exception e) {}
+	    }
+	}
+	public int contarPuertasPendientes(int idMonster) {
+	    int cantidad = 0;
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT COUNT(*) AS total FROM puerta_asignada pa " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "LEFT JOIN resultado r ON r.id_puerta_asignada = pa.id " +
+	                       "WHERE pas.id_monster = ? AND r.id IS NULL";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        if (rs.next()) { cantidad = rs.getInt("total"); }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if (rs != null) rs.close(); if (stmt != null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) { e.printStackTrace(); }
+	    }
+	    return cantidad;
+	}
+
+	public List<AsignacionMonstruoDTO> getTop3Pendientes(int idMonster) {
+	    List<AsignacionMonstruoDTO> lista = new ArrayList<>();
+	    PreparedStatement stmt = null;
+	    ResultSet rs = null;
+	    try {
+	        String query = "SELECT pa.id AS idAsignacion, p.numero AS numeroPuerta, pu.nombre AS nombrePuesto " +
+	                       "FROM puerta_asignada pa " +
+	                       "INNER JOIN puerta p ON pa.id_puerta = p.id " +
+	                       "INNER JOIN puesto_asignado pas ON pa.id_puesto_asignado = pas.id " +
+	                       "INNER JOIN puesto pu ON pas.id_puesto = pu.id " +
+	                       "LEFT JOIN resultado r ON r.id_puerta_asignada = pa.id " +
+	                       "WHERE pas.id_monster = ? AND r.id IS NULL " +
+	                       "LIMIT 3";
+	        stmt = DbConnector.getInstancia().getConn().prepareStatement(query);
+	        stmt.setInt(1, idMonster);
+	        rs = stmt.executeQuery();
+	        while (rs.next()) {
+	            AsignacionMonstruoDTO dto = new AsignacionMonstruoDTO();
+	            dto.setIdAsignacion(rs.getInt("idAsignacion"));
+	            dto.setNumeroPuerta(rs.getString("numeroPuerta"));
+	            dto.setNombrePuesto(rs.getString("nombrePuesto"));
+	            dto.setDniNino("A definir"); 
+	            dto.setEstado("Pendiente");
+	            lista.add(dto);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } finally {
+	        try { if (rs != null) rs.close(); if (stmt != null) stmt.close(); DbConnector.getInstancia().releaseConn(); } catch (Exception e) { e.printStackTrace(); }
+	    }
+	    return lista;
+	}
 	public LinkedList<PuertaAsignada> GetByPuestoAsignado(int idPuestoAsignado) {
 		PreparedStatement pstmt=null;
 		ResultSet rs=null;
